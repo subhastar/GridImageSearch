@@ -32,6 +32,9 @@ public class SearchActivity extends Activity {
 	private ArrayList<ImageResult> imageResults;
 	private ImageResultArrayAdapter imageAdapter;
 	private Settings settings;
+	private int start;
+	private AsyncHttpClient client;
+	private String query;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -39,10 +42,13 @@ public class SearchActivity extends Activity {
 		setContentView(R.layout.activity_search);
 		setupViews();
 		
+		query = "";
+		start = 0;
+		client = new AsyncHttpClient();
+		
 		if (getIntent().hasExtra("settings")) {
 			settings = (Settings) getIntent().getSerializableExtra("settings");
 		}
-		ImageResult result = (ImageResult) getIntent().getSerializableExtra("result");
 		
 		imageResults = new ArrayList<ImageResult>();
 		imageAdapter = new ImageResultArrayAdapter(this, imageResults);
@@ -55,6 +61,15 @@ public class SearchActivity extends Activity {
 				ImageResult imageResult = imageResults.get(position);
 				i.putExtra("result", imageResult);
 				startActivity(i);
+			}
+		});
+		
+		gvResults.setOnScrollListener(new EndlessScrollListener() {
+			@Override
+			public void loadMore(int page, int totalItemsCount) {
+				// do something
+				Log.d("subhacounts", "calling load more");
+				loadData();
 			}
 		});
 	}
@@ -82,17 +97,22 @@ public class SearchActivity extends Activity {
 	}
 	
 	public void onImageSearch(View v) {
+		loadData();	
+	}
+	
+	public void loadData() {
 		String query = etQuery.getText().toString();
-		Toast.makeText(getBaseContext(), "Searching for " + query, 
-				Toast.LENGTH_SHORT).show();
-		
-		AsyncHttpClient client = new AsyncHttpClient();
-		
+		if (!this.query.equals(query)) {
+			this.start = 0;
+			imageResults.clear();
+		}
+		this.query = query;
+				
 		String settingsString = "&imgsz=" + settings.getImageSize() +
 				"&imgcolor=" + settings.getColorFilter() +
 				"&imgtype=" + settings.getImageType() +
 				"&as_sitesearch=" + settings.getSiteFilter();
-		client.get(BASE_URL + "?" + "rsz=8&start=" + 0 
+		client.get(BASE_URL + "?" + "rsz=8&start=" + start 
 				+ settingsString
 				+ "&v=1.0&q=" + Uri.encode(query),
 		new JsonHttpResponseHandler() {
@@ -102,9 +122,10 @@ public class SearchActivity extends Activity {
 				try {
 					imageJsonResults = response.getJSONObject(
 							"responseData").getJSONArray("results");
-					imageResults.clear();
 					imageAdapter.addAll(ImageResult.fromJSONArray(imageJsonResults));
 					Log.d("DEBUG", imageResults.toString());
+					
+					start += 8;
 				} catch (JSONException e) {
 					e.printStackTrace();
 				}
