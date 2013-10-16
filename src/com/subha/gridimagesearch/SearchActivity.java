@@ -27,6 +27,7 @@ public class SearchActivity extends Activity {
 	
 	private static final String BASE_URL =
 			"https://ajax.googleapis.com/ajax/services/search/images";
+	private static final int REQUEST_CODE = 5;
 	private EditText etQuery;
 	private GridView gvResults;
 	private ArrayList<ImageResult> imageResults;
@@ -46,10 +47,6 @@ public class SearchActivity extends Activity {
 		start = 0;
 		client = new AsyncHttpClient();
 		
-		if (getIntent().hasExtra("settings")) {
-			settings = (Settings) getIntent().getSerializableExtra("settings");
-		}
-		
 		imageResults = new ArrayList<ImageResult>();
 		imageAdapter = new ImageResultArrayAdapter(this, imageResults);
 		gvResults.setAdapter(imageAdapter);
@@ -60,7 +57,7 @@ public class SearchActivity extends Activity {
 				Intent i = new Intent(getApplicationContext(), ImageDisplayActivity.class);
 				ImageResult imageResult = imageResults.get(position);
 				i.putExtra("result", imageResult);
-				startActivity(i);
+				startActivityForResult(i, REQUEST_CODE);
 			}
 		});
 		
@@ -74,6 +71,12 @@ public class SearchActivity extends Activity {
 		});
 	}
 	
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		if (resultCode == RESULT_OK && requestCode == REQUEST_CODE) {
+			settings = (Settings) data.getSerializableExtra("settings");
+		}
+	}
 	private void setupViews() {
 		etQuery = (EditText) findViewById(R.id.etQuery);
 		gvResults = (GridView) findViewById(R.id.gvResults);

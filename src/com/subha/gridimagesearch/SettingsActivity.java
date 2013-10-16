@@ -12,6 +12,7 @@ import android.widget.EditText;
 import android.widget.Spinner;
 
 public class SettingsActivity extends Activity {
+	private static final int REQUEST_CODE = 5;
 	private Settings settings;
 
 	@Override
@@ -88,9 +89,10 @@ public class SettingsActivity extends Activity {
 	public void saveSettings(View v) {
 		EditText etSiteFilter = (EditText) findViewById(R.id.etSiteFilter);
 		settings.setSiteFilter(etSiteFilter.getText().toString());
-		Intent i = new Intent(getApplicationContext(), SearchActivity.class);
+		Intent i = new Intent();
 		i.putExtra("settings", this.settings);
-		startActivity(i);
+		setResult(RESULT_OK, i);
+		finish();
 	}
 	
 	@Override
